@@ -15,7 +15,6 @@ exclude =
     utils/app.py
     utils/pygettext.py
     alembic.ini
-    celerybeat-schedule
 max-line-length = 88
 per-file-ignores = 
     __init__.py:F401

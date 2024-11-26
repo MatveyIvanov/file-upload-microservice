@@ -5,10 +5,6 @@ networks:
 volumes:
   db-data:
     name: ${PROJECT_NAME}-db-data
-  redis-data:
-    name: ${PROJECT_NAME}-redis-data
-  rabbitmq-data:
-    name: ${PROJECT_NAME}-rabbitmq-data
 
 services:
   nginx:
@@ -60,51 +56,6 @@ services:
     mem_limit: ${DB_MEM_LIMIT:-1G}
     mem_reservation: ${DB_MEM_RESERVATION:-500M}
 
-  redis:
-    container_name: ${PROJECT_NAME}-redis
-    image: redis:${REDIS_VERSION}
-    command:
-      - "--requirepass ${REDIS_PASSWORD}"
-    volumes:
-      - redis-data:/data
-    networks:
-      - network
-    restart: ${RESTART_POLICY:-unless-stopped}
-    healthcheck:
-      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    cpus: ${REDIS_CPUS:-0.000}
-    mem_limit: ${REDIS_MEM_LIMIT:-1G}
-    mem_reservation: ${REDIS_MEM_RESERVATION:-500M}
-
-  rabbitmq:
-    container_name: ${PROJECT_NAME}-rabbitmq
-    image: rabbitmq:${RABBITMQ_VERSION}
-    hostname: ${PROJECT_NAME}
-    expose:
-      - ${RABBITMQ_PORT}
-    environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
-    env_file:
-      - .env
-    volumes:
-      - ../rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
-      - rabbitmq-data:/var/lib/rabbitmq
-    networks:
-      - network
-    restart: ${RESTART_POLICY:-unless-stopped}
-    healthcheck:
-      test: rabbitmq-diagnostics -q ping
-      interval: 15s
-      timeout: 10s
-      retries: 3
-    cpus: ${RABBITMQ_CPUS:-0.000}
-    mem_limit: ${RABBITMQ_MEM_LIMIT:-1G}
-    mem_reservation: ${RABBITMQ_MEM_RESERVATION:-500M}
-
   asgi:
     container_name: ${PROJECT_NAME}-asgi
     build:
@@ -118,10 +69,6 @@ services:
       - ${MEDIA_PATH}:/media
       - ${LOG_PATH}:/logs
     depends_on:
-      redis:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
       db:
         condition: service_healthy
     expose:
@@ -132,53 +79,3 @@ services:
     cpus: ${ASGI_CPUS:-0.000}
     mem_limit: ${ASGI_MEM_LIMIT:-1G}
     mem_reservation: ${ASGI_MEM_RESERVATION:-500M}
-
-  celery-worker:
-    container_name: ${PROJECT_NAME}-celery-worker
-    build:
-      context: ../
-      dockerfile: docker/backend/Dockerfile
-      target: ${CELERY_TARGET}
-    depends_on:
-      - asgi
-    env_file:
-      - .env
-    volumes:
-      - ${MEDIA_PATH}:/media
-      - ${LOG_PATH}:/logs
-    networks:
-      - network
-    restart: ${RESTART_POLICY:-unless-stopped}
-    healthcheck:
-      test: celery -A config inspect ping
-      interval: 15s
-      timeout: 10s
-      retries: 3
-    cpus: ${CELERY_CPUS:-0.000}
-    mem_limit: ${CELERY_MEM_LIMIT:-1G}
-    mem_reservation: ${CELERY_MEM_RESERVATION:-500M}
-
-  celery-beat:
-    container_name: ${PROJECT_NAME}-celery-beat
-    build:
-      context: ../
-      dockerfile: docker/backend/Dockerfile
-      target: ${BEAT_TARGET}
-    depends_on:
-      celery-worker:
-        condition: service_healthy
-    env_file:
-      - .env
-    volumes:
-      - ${LOG_PATH}:/logs
-    networks:
-      - network
-    restart: ${RESTART_POLICY:-unless-stopped}
-    healthcheck:
-      test: celery -A config inspect ping
-      interval: 15s
-      timeout: 20s
-      retries: 3
-    cpus: ${BEAT_CPUS:-0.000}
-    mem_limit: ${BEAT_MEM_LIMIT:-1G}
-    mem_reservation: ${BEAT_MEM_RESERVATION:-500M}

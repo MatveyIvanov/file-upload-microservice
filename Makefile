@@ -1,4 +1,4 @@
-PROJECT_NAME=fastapi
+PROJECT_NAME=fileupload
 
 localup:
 	docker compose -f docker/docker-compose.local.yml up --remove-orphans
@@ -22,7 +22,7 @@ black:
 	docker exec -it $(PROJECT_NAME)-asgi black .
 isort:
 	docker exec -it $(PROJECT_NAME)-asgi isort . --profile black --filter-files
-makemigrations:
+migrations:
 	docker exec -it $(PROJECT_NAME)-asgi alembic revision --autogenerate -m "$(MESSAGE)"
 migrate:
 	docker exec -it $(PROJECT_NAME)-asgi alembic upgrade head

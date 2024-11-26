@@ -7,7 +7,7 @@ DB_HOST: str = os.environ.get("DB_HOST", "")
 DB_PORT: str = os.environ.get("DB_PORT", "")
 DATABASE_URL: str = os.environ.get("DATABASE_URL", "")
 
-TIMEZONE = os.environ.get("TIMEZONE")
+TIMEZONE = os.environ.get("TIMEZONE", "UTC")
 
 DEBUG = bool(int(os.environ.get("DEBUG", 0)))
 PROD = bool(int(os.environ.get("PROD", 1)))
@@ -19,3 +19,12 @@ LOGGING_SENSITIVE_FIELDS = os.environ.get("LOGGING_SENSITIVE_FIELDS", "").split(
 LOGGING_PATH = os.environ.get("LOG_PATH")
 
 PORT = os.environ.get("ASGI_PORT")
+
+UPLOAD_MAX_SIZE_IN_BYTES: int = int(
+    os.environ.get(
+        "UPLOAD_MAX_SIZE_IN_BYTES",
+        100 * 1024 * 1024,
+    )
+)
+
+MEDIA_ROOT: str = "/media"

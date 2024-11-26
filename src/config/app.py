@@ -17,10 +17,13 @@ from utils.exceptions import (
     request_validation_exception_handler,
 )
 from utils.logging import get_config
-from utils.middleware import LoggingMiddleware, TranslationMiddleware
-from utils.pagination import add_pagination
+from utils.middleware import LoggingMiddleware
 
 container = get_di_container()
+container.wire(
+    packages=["endpoints"],
+    modules=["endpoints.upload"],
+)
 
 
 logging.config.dictConfig(  # type: ignore[attr-defined]
@@ -41,9 +44,6 @@ for router in endpoints.get_routers():
     __app.include_router(router, tags=router.tags)
 
 
-add_pagination(__app)
-
-
 # custom exception handlers do not work w/o this
 # because of versioned fastapi
 handlers_to_apply = {}
@@ -58,7 +58,6 @@ __app = VersionedFastAPI(
     enable_latest=True,
 )
 __app.add_middleware(TrustedHostMiddleware, allowed_hosts=["127.0.0.1", "localhost"])
-__app.add_middleware(TranslationMiddleware)
 
 
 @__app.middleware("http")

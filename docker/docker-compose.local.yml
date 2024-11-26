@@ -5,10 +5,6 @@ networks:
 volumes:
   db-data:
     name: ${PROJECT_NAME}-db-data
-  redis-data:
-    name: ${PROJECT_NAME}-redis-data
-  rabbitmq-data:
-    name: ${PROJECT_NAME}-rabbitmq-data
 
 services:
   nginx:
@@ -21,33 +17,9 @@ services:
       file: docker-compose.yml
       service: db
 
-  redis:
-    extends:
-      file: docker-compose.yml
-      service: redis
-
-  rabbitmq:
-    extends:
-      file: docker-compose.yml
-      service: rabbitmq
-
   asgi:
     extends:
       file: docker-compose.yml
       service: asgi
-    volumes:
-      - ../src/:/apps/
-
-  celery-worker:
-    extends:
-      file: docker-compose.yml
-      service: celery-worker
-    volumes:
-      - ../src/:/apps/
-
-  celery-beat:
-    extends:
-      file: docker-compose.yml
-      service: celery-beat
     volumes:
       - ../src/:/apps/

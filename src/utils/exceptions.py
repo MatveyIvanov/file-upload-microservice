@@ -12,8 +12,6 @@ from starlette.status import (
     HTTP_500_INTERNAL_SERVER_ERROR,
 )
 
-from config.i18n import _
-
 logger = logging.getLogger("exceptions")
 
 
@@ -82,5 +80,5 @@ async def internal_exception_handler(request: Request, exc: Exception):
     )
     return JSONResponse(
         status_code=HTTP_500_INTERNAL_SERVER_ERROR,
-        content={"detail": _("An internal error has occurred.")},
+        content={"detail": "An internal error has occurred."},
     )

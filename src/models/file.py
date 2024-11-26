@@ -1,4 +1,6 @@
 from datetime import datetime
+from uuid import UUID as UUIDType
+
 from sqlalchemy import (
     Table,
     Column,
@@ -46,7 +48,7 @@ file_table = Table(
 
 
 class File:
-    uuid: str
+    uuid: UUIDType
     path: str
     size: int
     format: str

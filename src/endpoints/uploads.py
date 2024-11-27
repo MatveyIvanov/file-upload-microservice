@@ -47,7 +47,22 @@ async def get_file(
     )
 
 
-@router.get("/file/{uuid}/download/", response_class=FileResponse)
+@router.get(
+    "/file/{uuid}/download/",
+    response_class=FileResponse,
+    responses={
+        200: {
+            "content": {"application/octet-stream": {}},
+            "headers": {
+                "Content-Disposition": {
+                    "description": "Content disposition header",
+                    "type": "string",
+                    "example": 'attachment; filename="image.png"',
+                }
+            },
+        }
+    },
+)
 @version(0)
 @inject
 async def download_file(
@@ -55,27 +70,39 @@ async def download_file(
     repo: IRepo[File] = Depends(Provide[Container.file_repo]),
 ):
     file = await repo.get_by_id(uuid)
-    print(file.path, file.name, file.format)
     return FileResponse(
         file.path,
+        headers={"Content-Disposition": f'attachment; filename="{file.name}"'},
         media_type="application/octet-stream",
         filename=file.name,
     )
 
 
-@router.get("/file/{uuid}/stream/", response_class=StreamingResponse)
+@router.get(
+    "/file/{uuid}/stream/",
+    response_class=StreamingResponse,
+    responses={
+        200: {
+            "content": {"application/octet-stream": {}},
+            "headers": {
+                "Content-Disposition": {
+                    "description": "Content disposition header",
+                    "type": "string",
+                    "example": 'attachment; filename="image.png"',
+                }
+            },
+        }
+    },
+)
 @version(0)
 @inject
-async def stream_download_file(
+async def stream_file(
     uuid: UUID,
     repo: IRepo[File] = Depends(Provide[Container.file_repo]),
 ):
     file = await repo.get_by_id(uuid)
-    print(file.path, file.name, file.format)
-
-    headers = {"Content-Disposition": f'attachment; filename="{file.name}"'}
     return StreamingResponse(
         chunk_file(file.path),
-        headers=headers,
+        headers={"Content-Disposition": f'attachment; filename="{file.name}"'},
         media_type="application/octet-stream",
     )

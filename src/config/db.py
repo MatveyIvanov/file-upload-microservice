@@ -50,6 +50,8 @@ class Database:
             )
             raise
         else:
+            logging.debug("EXPUNGING...")
+            session.expunge_all()
             logging.debug("COMMITTING... ")
             try:
                 await session.commit()

@@ -6,7 +6,7 @@ from sqlalchemy import Column, Result, Select, delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from config.db import Base, Database
-from utils.decorators import handle_orm_error
+from utils.decorators import handle_orm_error, session as inject_session
 from utils.shortcuts import get_object_or_404
 
 TModel = TypeVar("TModel", bound=Base)
@@ -17,14 +17,14 @@ class IRepo(ABC, Generic[TModel]):
     @abstractmethod
     def all_as_select(self) -> Select[TModel]: ...
     @abstractmethod
-    async def all(self, *, session: AsyncSession) -> Result[TModel]: ...
+    async def all(self, *, session: AsyncSession = None) -> Result[TModel]: ...
     @abstractmethod
     async def get_by_id(
         self,
-        id_: int,
+        id_: int,  # TODO: generic or union type for id_
         *,
         for_update: bool = False,
-        session: AsyncSession,
+        session: AsyncSession = None,
     ) -> TModel: ...
     @abstractmethod
     async def get_by_ids(
@@ -32,7 +32,7 @@ class IRepo(ABC, Generic[TModel]):
         ids: List[int],
         *,
         for_update: bool = False,
-        session: AsyncSession,
+        session: AsyncSession = None,
     ) -> Select[TModel]: ...
     @abstractmethod
     async def get_by_field(
@@ -41,7 +41,7 @@ class IRepo(ABC, Generic[TModel]):
         value: Any,
         *,
         for_update: bool = False,
-        session: AsyncSession,
+        session: AsyncSession = None,
     ) -> TModel: ...
     @abstractmethod
     async def exists_by_field(
@@ -49,14 +49,14 @@ class IRepo(ABC, Generic[TModel]):
         field: str,
         value: Any,
         *,
-        session: AsyncSession,
+        session: AsyncSession = None,
     ) -> bool: ...
     @abstractmethod
     async def create(
         self,
         entry: TSchema,
         *,
-        session: AsyncSession,
+        session: AsyncSession = None,
     ) -> TModel: ...
     @abstractmethod
     async def update(
@@ -64,7 +64,7 @@ class IRepo(ABC, Generic[TModel]):
         instance: TModel,
         values: Dict,
         *,
-        session: AsyncSession,
+        session: AsyncSession = None,
     ) -> None: ...
     @abstractmethod
     async def multi_update(
@@ -72,14 +72,14 @@ class IRepo(ABC, Generic[TModel]):
         ids: List[int],
         *,
         values: Dict[str, Any],
-        session: AsyncSession,
+        session: AsyncSession = None,
     ) -> None: ...
     @abstractmethod
     async def delete(
         self,
         instance: TModel,
         *,
-        session: AsyncSession,
+        session: AsyncSession = None,
     ) -> None: ...
     @abstractmethod
     async def delete_by_field(
@@ -87,7 +87,7 @@ class IRepo(ABC, Generic[TModel]):
         field: str,
         value: Any,
         *,
-        session: AsyncSession,
+        session: AsyncSession = None,
     ) -> None: ...
 
 
@@ -107,16 +107,18 @@ class Repo(IRepo[TModel]):
         return select(self.model_class)
 
     @handle_orm_error
-    async def all(self, *, session: AsyncSession) -> Result[TModel]:
+    @inject_session
+    async def all(self, *, session: AsyncSession = None) -> Result[TModel]:
         return await session.execute(self.all_as_select())
 
     @handle_orm_error
+    @inject_session
     async def get_by_id(
         self,
         id_: int,
         *,
         for_update: bool = False,
-        session: AsyncSession,
+        session: AsyncSession = None,
     ) -> TModel:
         qs = self.all_as_select().filter(self.pk == id_)
         if for_update:
@@ -126,12 +128,13 @@ class Repo(IRepo[TModel]):
         return get_object_or_404(first[0] if first else None)
 
     @handle_orm_error
+    @inject_session
     async def get_by_ids(
         self,
         ids: List[int],
         *,
         for_update: bool = False,
-        session: AsyncSession,
+        session: AsyncSession = None,
     ) -> Select[TModel]:
         qs = self.all_as_select().filter(self.pk.in_(ids))
         if for_update:
@@ -141,13 +144,14 @@ class Repo(IRepo[TModel]):
         return get_object_or_404(first[0] if first else None)
 
     @handle_orm_error
+    @inject_session
     async def get_by_field(
         self,
         field: str,
         value: Any,
         *,
         for_update: bool = False,
-        session: AsyncSession,
+        session: AsyncSession = None,
     ) -> TModel:
         qs = self.all_as_select().filter(getattr(self.model_class, field) == value)
         if for_update:
@@ -157,8 +161,9 @@ class Repo(IRepo[TModel]):
         return get_object_or_404(first[0] if first else None)
 
     @handle_orm_error
+    @inject_session
     async def exists_by_field(
-        self, field: str, value: Any, *, session: AsyncSession
+        self, field: str, value: Any, *, session: AsyncSession = None
     ) -> bool:
         qs = (
             self.all_as_select()
@@ -169,11 +174,12 @@ class Repo(IRepo[TModel]):
         return result.first() is not None
 
     @handle_orm_error
+    @inject_session
     async def create(
         self,
         entry: TSchema,
         *,
-        session: AsyncSession,
+        session: AsyncSession = None,
     ) -> TModel:
         instance = self.model_class(**entry.model_dump())
         session.add(instance)
@@ -182,12 +188,13 @@ class Repo(IRepo[TModel]):
         return instance
 
     @handle_orm_error
+    @inject_session
     async def update(
         self,
         instance: TModel,
         values: Dict,
         *,
-        session: AsyncSession,
+        session: AsyncSession = None,
     ) -> None:
         await session.execute(
             update(self.model_class)
@@ -196,35 +203,38 @@ class Repo(IRepo[TModel]):
         )
 
     @handle_orm_error
+    @inject_session
     async def multi_update(
         self,
         ids: List[int],
         *,
         values: Dict[str, Any],
-        session: AsyncSession,
+        session: AsyncSession = None,
     ) -> None:
         await session.execute(
             update(self.model_class).filter(self.pk.in_(ids)).values(**values)
         )
 
     @handle_orm_error
+    @inject_session
     async def delete(
         self,
         instance: TModel,
         *,
-        session: AsyncSession,
+        session: AsyncSession = None,
     ) -> None:
         await session.execute(
             delete(self.model_class).filter(self.pk == getattr(instance, self.pk_field))
         )
 
     @handle_orm_error
+    @inject_session
     async def delete_by_field(
         self,
         field: str,
         value: Any,
         *,
-        session: AsyncSession,
+        session: AsyncSession = None,
     ) -> None:
         await session.execute(
             delete(self.model_class).filter(getattr(self.model_class, field) == value)

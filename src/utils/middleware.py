@@ -6,7 +6,7 @@ import time
 from typing import Dict
 
 from fastapi import Request, Response
-from starlette.types import Receive, Scope, Send
+from starlette.types import Scope
 
 from config.settings import PORT
 from utils.logging import EMPTY_VALUE, RequestJsonLogSchema
@@ -45,17 +45,20 @@ class LoggingMiddleware:
         return await request.json()
 
     async def __call__(self, request: Request, call_next, *args, **kwargs):
-        if "docs" in str(request.url):
+        if any(part in str(request.url) for part in ("docs", "stream")):
+            # NOTE for stream:
+            # This is a temporary workaround for streaming responses.
+            # Otherwise download fails.
             return await call_next(request)
         start_time = time.time()
         exception_object = None
-        # Request Side
+
         try:
             raw_request_body = await request.body()
-            # Последующие действия нужны,
-            # чтобы не перезатереть тело запроса
-            # и не уйти в зависание event-loop'a
-            # при последующем получении тела ответа
+            # Further actions are required
+            # to rewrite request body and
+            # avoid event-loop hanging
+            # on returning response.
             await self.set_body(request, raw_request_body)
             request_body = await self.get_body(request)
         except Exception:
@@ -63,7 +66,7 @@ class LoggingMiddleware:
 
         server: tuple = request.get("server", ("localhost", PORT))
         request_headers: dict = dict(request.headers.items())
-        # Response Side
+
         try:
             response = await call_next(request)
         except Exception as ex:
@@ -84,9 +87,16 @@ class LoggingMiddleware:
                 status_code=response.status_code,
                 headers=dict(response.headers),
                 media_type=response.media_type,
+                background=response.background,
             )
+
         duration: int = math.ceil((time.time() - start_time) * 1000)
-        response_body_str = response_body.decode()
+
+        try:
+            response_body_str = response_body.decode()
+        except UnicodeDecodeError:
+            response_body_str = ""
+
         try:
             response_body_map = json.loads(response_body_str)
         except json.JSONDecodeError:
@@ -112,9 +122,7 @@ class LoggingMiddleware:
             response_body=response_body_map or {},
             duration=duration,
         ).model_dump()
-        # Хочется на каждый запрос читать
-        # и понимать в сообщении самое главное,
-        # поэтому message мы сразу делаем типовым
+
         message = (
             f'{"Ошибка" if exception_object else "Ответ"} '
             f"с кодом {response.status_code} "

@@ -22,7 +22,7 @@ from utils.middleware import LoggingMiddleware
 container = get_di_container()
 container.wire(
     packages=["endpoints"],
-    modules=["endpoints.upload"],
+    modules=["endpoints.uploads"],
 )
 
 

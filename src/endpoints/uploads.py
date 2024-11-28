@@ -1,7 +1,10 @@
+import io
+from typing import Annotated
+from urllib.parse import unquote
 from uuid import UUID
 
 from dependency_injector.wiring import Provide, inject
-from fastapi import Depends, UploadFile
+from fastapi import Depends, Header, Request, UploadFile
 from fastapi.responses import FileResponse, StreamingResponse
 from fastapi_versioning import version
 
@@ -25,6 +28,30 @@ async def upload_file(
     create_file: ICreateFile = Depends(Provide[Container.create_file]),
 ):
     return await create_file(file)
+
+
+@router.post("/file/stream/", response_model=UploadedFile)
+@version(0)
+@inject
+async def stream_upload_file(
+    request: Request,
+    filename: Annotated[str, Header()],
+    content_type: Annotated[str, Header(regex=r"application/octet-stream")],
+    create_file: ICreateFile = Depends(Provide[Container.create_file]),
+):
+    buffer = io.BytesIO()
+    async for chunk in request.stream():
+        buffer.write(chunk)
+
+    buffer.seek(0)
+    return await create_file(
+        file=UploadFile(
+            file=buffer,
+            size=buffer.getbuffer().nbytes,
+            filename=filename,
+            headers=request.headers,
+        )
+    )
 
 
 @router.get("/file/{uuid}/", response_model=UploadedFile)

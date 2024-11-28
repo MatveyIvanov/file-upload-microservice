@@ -75,12 +75,19 @@ for sub_app in __app.routes:
 
 
 @__app.on_event("startup")
-# @repeat_every(seconds=settings.SCHEDULER_DISK_CLEANUP_EVERY * 60)
-@repeat_every(seconds=30, raise_exceptions=True)
+@repeat_every(
+    seconds=settings.SCHEDULER_DISK_CLEANUP_EVERY * 60,
+    raise_exceptions=True,
+)
 async def disk_cleanup() -> None:
-    print("DISK CLEANUP!")
+    # NOTE: This could be done in many different ways:
+    # scheduler, crontab, linux crontab,
+    # celery worker + beat, etc.
+    # But for such a simple, rarely running task
+    # this looks ok.
+    logging.debug("DISK CLEANUP STARTED...")
     await container.clean_disk()()
-    print("END")
+    logging.debug("DISK CLEANUP ENDED...")
 
 
 def get_fastapi_app() -> FastAPI:

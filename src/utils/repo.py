@@ -1,8 +1,18 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Generic, List, Type, TypeVar
+from typing import Any, Callable, Dict, Generic, List, Literal, Type, TypeAlias, TypeVar
 
 from pydantic import BaseModel
-from sqlalchemy import Column, Result, Select, delete, select, update
+from sqlalchemy import (
+    BinaryExpression,
+    Column,
+    ColumnElement,
+    Result,
+    Select,
+    delete,
+    select,
+    update,
+    and_,
+)
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from config.db import Base, Database
@@ -11,6 +21,37 @@ from utils.shortcuts import get_object_or_404
 
 TModel = TypeVar("TModel", bound=Base)
 TSchema = TypeVar("TSchema", bound=BaseModel)
+
+Operator = Literal["eq", "lt", "le", "gt", "ge", "in", "is"]
+Filters: TypeAlias = Dict[str, Any]
+FieldToOperator: TypeAlias = Dict[str, Operator]
+
+
+__OPERATOR_TO_ORM: Dict[
+    Operator,
+    Callable[[Column, Any], BinaryExpression | ColumnElement],
+] = {
+    "eq": Column.__eq__,
+    "lt": Column.__lt__,
+    "le": Column.__le__,
+    "gt": Column.__gt__,
+    "ge": Column.__ge__,
+    "in": Column.in_,
+    "is": Column.is_,
+}
+
+
+def _build_filters(
+    model: TModel,
+    filters: Filters,
+    operator_overrides: FieldToOperator | None,
+) -> List[BinaryExpression | ColumnElement]:
+    result, operator_overrides = [], operator_overrides or {}
+    for field, value in filters.items():
+        column = getattr(model, field)
+        operator = __OPERATOR_TO_ORM[operator_overrides.get(field, "eq")]
+        result.append(operator(column, value))
+    return result
 
 
 class IRepo(ABC, Generic[TModel]):
@@ -43,6 +84,15 @@ class IRepo(ABC, Generic[TModel]):
         for_update: bool = False,
         session: AsyncSession = None,
     ) -> TModel: ...
+    @abstractmethod
+    async def get_by_filters(
+        self,
+        *,
+        filters: Filters,
+        operator_overrides: FieldToOperator | None = None,
+        for_update: bool = False,
+        session: AsyncSession = None,
+    ) -> Result[TModel]: ...
     @abstractmethod
     async def exists_by_field(
         self,
@@ -159,6 +209,30 @@ class Repo(IRepo[TModel]):
         result = await session.execute(qs)
         first = result.first()
         return get_object_or_404(first[0] if first else None)
+
+    @handle_orm_error
+    @inject_session
+    async def get_by_filters(
+        self,
+        *,
+        filters: Filters,
+        operator_overrides: FieldToOperator | None = None,
+        for_update: bool = False,
+        session: AsyncSession = None,
+    ) -> Result[TModel]:
+        qs = self.all_as_select().filter(
+            and_(
+                *_build_filters(
+                    self.model_class,
+                    filters,
+                    operator_overrides,
+                )
+            )
+        )
+        if for_update:
+            qs = qs.with_for_update()
+        print("COMPILED: ", qs.compile())
+        return await session.execute(qs)
 
     @handle_orm_error
     @inject_session

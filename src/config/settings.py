@@ -36,3 +36,23 @@ AWS_SESSION_TOKEN: str = os.environ.get("AWS_SESSION_TOKEN", "")
 AWS_ENDPOINT_URL: str = os.environ.get("AWS_ENDPOINT_URL", "")
 AWS_REGION_NAME: str = os.environ.get("AWS_REGION_NAME", "")
 AWS_BUCKET_NAME: str = os.environ.get("AWS_BUCKET_NAME", "")
+
+# Scheduler
+SCHEDULER_DISK_CLEANUP_EVERY: int = int(
+    os.environ.get(
+        "SCHEDULER_DISK_CLEANUP_EVERY",
+        3600,
+    )
+)  # in minutes
+SCHEDULER_REMOVE_FILES_OLDER_THAN: int = int(
+    os.environ.get(
+        "SCHEDULER_REMOVE_FILES_OLDER_THAN",
+        30,
+    )
+)  # in days
+SCHEDULER_REMOVE_FILES_UNUSED_MORE_THAN: int = int(
+    os.environ.get(
+        "SCHEDULER_REMOVE_FILES_UNUSED_MORE_THAN",
+        30,
+    )
+)  # in days

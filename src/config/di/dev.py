@@ -41,3 +41,9 @@ class Container(containers.DeclarativeContainer):
         endpoint_url=settings.AWS_ENDPOINT_URL,
         bucket=settings.AWS_BUCKET_NAME,
     )
+    clean_disk = providers.Singleton(
+        CleanDisk,
+        max_days=settings.SCHEDULER_REMOVE_FILES_OLDER_THAN,
+        max_days_unused=settings.SCHEDULER_REMOVE_FILES_UNUSED_MORE_THAN,
+        repo=file_repo,
+    )

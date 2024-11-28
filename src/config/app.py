@@ -1,9 +1,10 @@
 import logging
 
-from fastapi import Request
+from fastapi import Depends, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi_versioning import VersionedFastAPI
+from fastapi_utils.tasks import repeat_every
 from starlette.status import HTTP_500_INTERNAL_SERVER_ERROR
 
 import endpoints
@@ -71,6 +72,15 @@ for sub_app in __app.routes:
     if hasattr(sub_app.app, "add_exception_handler"):
         for exception, handler in handlers_to_apply.items():
             sub_app.app.add_exception_handler(exception, handler)
+
+
+@__app.on_event("startup")
+# @repeat_every(seconds=settings.SCHEDULER_DISK_CLEANUP_EVERY * 60)
+@repeat_every(seconds=30, raise_exceptions=True)
+async def disk_cleanup() -> None:
+    print("DISK CLEANUP!")
+    await container.clean_disk()()
+    print("END")
 
 
 def get_fastapi_app() -> FastAPI:

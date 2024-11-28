@@ -81,7 +81,7 @@ async def get_file(
         name=file.name,
         ext=file.ext,
         created_at=file.created_at,
-        updated_at=file.updated_at,
+        available_for_download=file.is_removed_from_disk is False,
     )
 
 

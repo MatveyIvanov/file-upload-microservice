@@ -23,3 +23,4 @@ per-file-ignores =
     *schema.py:E501
     *utils.py:E501
     *test_*.py:E501,F401
+    *utils/repo.py:E301

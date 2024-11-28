@@ -19,3 +19,8 @@ class ICreateFile(ABC):
 class IExtractMetadata(ABC):
     @abstractmethod
     def __call__(self, file: UploadFile) -> FileMetadata: ...
+
+
+class ISaveFileToExternalStorage(ABC):
+    @abstractmethod
+    async def __call__(self, uuid: str) -> None: ...

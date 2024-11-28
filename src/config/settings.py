@@ -28,3 +28,11 @@ UPLOAD_MAX_SIZE_IN_BYTES: int = int(
 )
 
 MEDIA_ROOT: str = "/media"
+
+# S3
+AWS_ACCESS_KEY_ID: str = os.environ.get("AWS_ACCESS_KEY_ID", "")
+AWS_SECRET_ACCESS_KEY: str = os.environ.get("AWS_SECRET_ACCESS_KEY", "")
+AWS_SESSION_TOKEN: str = os.environ.get("AWS_SESSION_TOKEN", "")
+AWS_ENDPOINT_URL: str = os.environ.get("AWS_ENDPOINT_URL", "")
+AWS_REGION_NAME: str = os.environ.get("AWS_REGION_NAME", "")
+AWS_BUCKET_NAME: str = os.environ.get("AWS_BUCKET_NAME", "")

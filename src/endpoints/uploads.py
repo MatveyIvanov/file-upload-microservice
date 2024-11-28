@@ -1,16 +1,15 @@
 import io
 from typing import Annotated
-from urllib.parse import unquote
 from uuid import UUID
 
 from dependency_injector.wiring import Provide, inject
-from fastapi import Depends, Header, Request, UploadFile
+from fastapi import BackgroundTasks, Depends, Header, Request, UploadFile
 from fastapi.responses import FileResponse, StreamingResponse
 from fastapi_versioning import version
 
 from config.di import Container
 from schemas.files import UploadedFile
-from services.interfaces import ICreateFile
+from services.interfaces import ICreateFile, ISaveFileToExternalStorage
 from models.file import File
 from utils.file import chunk_file
 from utils.repo import IRepo
@@ -25,9 +24,15 @@ router = APIRouter(prefix="/uploads", tags=["uploads"])
 @inject
 async def upload_file(
     file: UploadFile,
+    background_tasks: BackgroundTasks,
     create_file: ICreateFile = Depends(Provide[Container.create_file]),
+    save_to_s3: ISaveFileToExternalStorage = Depends(
+        Provide[Container.save_file_to_s3]
+    ),
 ):
-    return await create_file(file)
+    instance = await create_file(file)
+    background_tasks.add_task(save_to_s3, instance.uuid)
+    return instance
 
 
 @router.post("/file/stream/", response_model=UploadedFile)
@@ -37,14 +42,18 @@ async def stream_upload_file(
     request: Request,
     filename: Annotated[str, Header()],
     content_type: Annotated[str, Header(regex=r"application/octet-stream")],
+    background_tasks: BackgroundTasks,
     create_file: ICreateFile = Depends(Provide[Container.create_file]),
+    save_to_s3: ISaveFileToExternalStorage = Depends(
+        Provide[Container.save_file_to_s3]
+    ),
 ):
     buffer = io.BytesIO()
     async for chunk in request.stream():
         buffer.write(chunk)
 
     buffer.seek(0)
-    return await create_file(
+    instance = await create_file(
         file=UploadFile(
             file=buffer,
             size=buffer.getbuffer().nbytes,
@@ -52,6 +61,8 @@ async def stream_upload_file(
             headers=request.headers,
         )
     )
+    background_tasks.add_task(save_to_s3, instance.uuid)
+    return instance
 
 
 @router.get("/file/{uuid}/", response_model=UploadedFile)

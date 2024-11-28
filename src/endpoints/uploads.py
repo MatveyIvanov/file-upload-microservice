@@ -11,6 +11,7 @@ from config.di import Container
 from schemas.files import UploadedFile
 from services.interfaces import ICreateFile, ISaveFileToExternalStorage
 from models.file import File
+from utils.exceptions import Custom400Exception
 from utils.file import chunk_file
 from utils.repo import IRepo
 from utils.routing import APIRouter
@@ -108,6 +109,9 @@ async def download_file(
     repo: IRepo[File] = Depends(Provide[Container.file_repo]),
 ):
     file = await repo.get_by_id(uuid)
+    if file.is_removed_from_disk:
+        # S3 could be integrated in that case.
+        raise Custom400Exception("File is not available for download.")
     return FileResponse(
         file.path,
         headers={"Content-Disposition": f'attachment; filename="{file.name}"'},
@@ -139,6 +143,9 @@ async def stream_file(
     repo: IRepo[File] = Depends(Provide[Container.file_repo]),
 ):
     file = await repo.get_by_id(uuid)
+    if file.is_removed_from_disk:
+        # S3 could be integrated in that case.
+        raise Custom400Exception("File is not available for download.")
     return StreamingResponse(
         chunk_file(file.path),
         headers={"Content-Disposition": f'attachment; filename="{file.name}"'},

@@ -24,3 +24,8 @@ class IExtractMetadata(ABC):
 class ISaveFileToExternalStorage(ABC):
     @abstractmethod
     async def __call__(self, uuid: str) -> None: ...
+
+
+class ICleanDisk(ABC):
+    @abstractmethod
+    async def __call__(self) -> None: ...

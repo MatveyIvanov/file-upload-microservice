@@ -20,9 +20,9 @@ class FileLimiter:
 
 def upload():
     with open("/media/XTXZRMLBFBIIDDINESHX.png", "rb") as file:
-        upload = FileLimiter(file, 128)
+        # upload = FileLimiter(file, 128)
         response = httpx.post(
-            f"http://localhost:8000/api/v0/uploads/file/stream/",
+            "http://localhost:8000/api/v0/uploads/file/stream/",
             files={"file": file},
             headers={
                 "Content-Type": "application/octet-stream",

@@ -6,8 +6,10 @@ from sqlalchemy import Column, Result, Select, delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from config.db import Base, Database
-from utils.decorators import handle_orm_error, session as inject_session
+from utils.decorators import handle_orm_error
+from utils.decorators import session as inject_session
 from utils.shortcuts import get_object_or_404
+from utils.sqlalchemy import IFilterSeq
 
 TModel = TypeVar("TModel", bound=Base)
 TSchema = TypeVar("TSchema", bound=BaseModel)
@@ -43,6 +45,14 @@ class IRepo(ABC, Generic[TModel]):
         for_update: bool = False,
         session: AsyncSession = None,
     ) -> TModel: ...
+    @abstractmethod
+    async def get_by_filters(
+        self,
+        *,
+        filters: IFilterSeq,
+        for_update: bool = False,
+        session: AsyncSession = None,
+    ) -> Result[TModel]: ...
     @abstractmethod
     async def exists_by_field(
         self,
@@ -162,8 +172,26 @@ class Repo(IRepo[TModel]):
 
     @handle_orm_error
     @inject_session
+    async def get_by_filters(
+        self,
+        *,
+        filters: IFilterSeq,
+        for_update: bool = False,
+        session: AsyncSession = None,
+    ) -> Result[TModel]:
+        qs = self.all_as_select().filter(filters.compile())
+        if for_update:
+            qs = qs.with_for_update()
+        return await session.execute(qs)
+
+    @handle_orm_error
+    @inject_session
     async def exists_by_field(
-        self, field: str, value: Any, *, session: AsyncSession = None
+        self,
+        field: str,
+        value: Any,
+        *,
+        session: AsyncSession = None,
     ) -> bool:
         qs = (
             self.all_as_select()

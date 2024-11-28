@@ -1,8 +1,8 @@
-from aioboto3 import Session
 import aiofiles
+from aioboto3 import Session
 
-from services.interfaces import ISaveFileToExternalStorage
 from models.file import File
+from services.interfaces import ISaveFileToExternalStorage
 from utils.repo import IRepo
 
 
@@ -21,16 +21,26 @@ class SaveFileToS3(ISaveFileToExternalStorage):
 
     async def __call__(self, uuid: str) -> None:
         file = await self._get_file(uuid)
-        await self._save_to_s3(file)
+        sent = await self._save_to_s3(file)
+        if sent:
+            await self._update_file(file)
 
     async def _get_file(self, uuid: str) -> File:
         return await self.repo.get_by_id(uuid)
 
-    async def _save_to_s3(self, file: File) -> None:
-        async with self.boto3.client("s3", endpoint_url=self.endpoint_url) as s3:
-            async with aiofiles.open(file.path, "rb") as stream:
-                await s3.upload_fileobj(
-                    stream,
-                    self.bucket,
-                    file.path.strip("/"),
-                )
+    async def _save_to_s3(self, file: File) -> bool:
+        try:
+            async with self.boto3.client("s3", endpoint_url=self.endpoint_url) as s3:
+                async with aiofiles.open(file.path, "rb") as stream:
+                    await s3.upload_fileobj(
+                        stream,
+                        self.bucket,
+                        file.path.strip("/"),
+                    )
+            return True
+        except Exception:
+            # TODO: logging
+            return False
+
+    async def _update_file(self, file: File) -> None:
+        await self.repo.update(file, values={"is_saved_to_s3": True})

@@ -1,19 +1,18 @@
-from pathlib import Path
 import uuid
+from pathlib import Path
 
 import aiofiles
 from fastapi import UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from services.interfaces import ICreateFile, IExtractMetadata
-from models.file import File
-from schemas.files import UploadedFile, FileMetadata
 from config import settings
-from utils.exceptions import Custom400Exception
-from utils.time import get_current_time
+from models.file import File
+from schemas.files import CreateFileSchema, FileMetadata, UploadedFile
+from services.interfaces import ICreateFile, IExtractMetadata
 from utils.decorators import session
-from utils.repo import IRepo
+from utils.exceptions import Custom400Exception
 from utils.random import random_string
+from utils.repo import IRepo
 
 
 class CreateFile(ICreateFile):
@@ -46,7 +45,7 @@ class CreateFile(ICreateFile):
             name=instance.name,
             ext=instance.ext,
             created_at=instance.created_at,
-            updated_at=instance.updated_at,
+            available_for_download=instance.is_removed_from_disk is False,
         )
 
     def _extract_metadata(self, file: UploadFile) -> FileMetadata:
@@ -69,15 +68,13 @@ class CreateFile(ICreateFile):
         session: AsyncSession,
     ) -> File:
         return await self.repo.create(
-            entry=UploadedFile(
+            entry=CreateFileSchema(
                 uuid=str(uuid.uuid4()),
                 path=path,
                 size=metadata.size,
                 format=metadata.format,
                 name=metadata.name,
                 ext=metadata.ext,
-                created_at=get_current_time(),
-                updated_at=get_current_time(),
             ),
             session=session,
         )

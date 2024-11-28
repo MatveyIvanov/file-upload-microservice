@@ -11,7 +11,16 @@ class UploadedFile(BaseModel):
     name: str
     ext: str
     created_at: datetime
-    updated_at: datetime
+    available_for_download: bool
+
+
+class CreateFileSchema(BaseModel):
+    uuid: UUID4
+    path: str
+    size: int
+    format: str
+    name: str
+    ext: str
 
 
 class FileMetadata(BaseModel):

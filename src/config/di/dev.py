@@ -3,9 +3,10 @@ from dependency_injector import containers, providers
 
 from config import settings
 from config.db import Database
-from services import *
 from models.file import File
+from services import *
 from utils.repo import Repo
+from utils.sqlalchemy import Filter
 
 
 class Container(containers.DeclarativeContainer):
@@ -26,6 +27,21 @@ class Container(containers.DeclarativeContainer):
         model_class=File,
         pk_field="uuid",
     )
+    file_created_at_filter = providers.Singleton(
+        Filter,
+        model_class=File,
+        column_name="created_at",
+    )
+    file_updated_at_filter = providers.Singleton(
+        Filter,
+        model_class=File,
+        column_name="updated_at",
+    )
+    file_is_removed_from_disk_filter = providers.Singleton(
+        Filter,
+        model_class=File,
+        column_name="is_removed_from_disk",
+    )
 
     extract_metadata = providers.Singleton(ExtractMetadata)
     create_file = providers.Singleton(
@@ -40,4 +56,13 @@ class Container(containers.DeclarativeContainer):
         boto3=boto3,
         endpoint_url=settings.AWS_ENDPOINT_URL,
         bucket=settings.AWS_BUCKET_NAME,
+    )
+    clean_disk = providers.Singleton(
+        CleanDisk,
+        max_days=settings.SCHEDULER_REMOVE_FILES_OLDER_THAN,
+        max_days_unused=settings.SCHEDULER_REMOVE_FILES_UNUSED_MORE_THAN,
+        repo=file_repo,
+        created_at_filter=file_created_at_filter,
+        updated_at_filter=file_updated_at_filter,
+        is_removed_from_disk_filter=file_is_removed_from_disk_filter,
     )

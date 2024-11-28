@@ -8,13 +8,13 @@ from fastapi.responses import FileResponse, StreamingResponse
 from fastapi_versioning import version
 
 from config.di import Container
+from models.file import File
 from schemas.files import UploadedFile
 from services.interfaces import ICreateFile, ISaveFileToExternalStorage
-from models.file import File
+from utils.exceptions import Custom400Exception
 from utils.file import chunk_file
 from utils.repo import IRepo
 from utils.routing import APIRouter
-
 
 router = APIRouter(prefix="/uploads", tags=["uploads"])
 
@@ -81,7 +81,7 @@ async def get_file(
         name=file.name,
         ext=file.ext,
         created_at=file.created_at,
-        updated_at=file.updated_at,
+        available_for_download=file.is_removed_from_disk is False,
     )
 
 
@@ -108,6 +108,9 @@ async def download_file(
     repo: IRepo[File] = Depends(Provide[Container.file_repo]),
 ):
     file = await repo.get_by_id(uuid)
+    if file.is_removed_from_disk:
+        # S3 could be integrated in that case.
+        raise Custom400Exception("File is not available for download.")
     return FileResponse(
         file.path,
         headers={"Content-Disposition": f'attachment; filename="{file.name}"'},
@@ -139,6 +142,9 @@ async def stream_file(
     repo: IRepo[File] = Depends(Provide[Container.file_repo]),
 ):
     file = await repo.get_by_id(uuid)
+    if file.is_removed_from_disk:
+        # S3 could be integrated in that case.
+        raise Custom400Exception("File is not available for download.")
     return StreamingResponse(
         chunk_file(file.path),
         headers={"Content-Disposition": f'attachment; filename="{file.name}"'},

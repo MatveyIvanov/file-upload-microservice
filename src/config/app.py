@@ -1,10 +1,10 @@
 import logging
 
-from fastapi import Depends, Request
+from fastapi import Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
-from fastapi_versioning import VersionedFastAPI
 from fastapi_utils.tasks import repeat_every
+from fastapi_versioning import VersionedFastAPI
 from starlette.status import HTTP_500_INTERNAL_SERVER_ERROR
 
 import endpoints

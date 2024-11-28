@@ -1,17 +1,20 @@
 import asyncio
-from typing import List, Any
+from typing import List, TypeVar
 
 DEFAULT_CONCURRENCY: int = 5
 
 
+TResult = TypeVar("TResult")
+
+
 async def gather_with_concurrency(
-    tasks: List[asyncio.Task],
+    tasks: List[asyncio.Task[TResult]],
     *,
     max_concurrency: int = DEFAULT_CONCURRENCY,
-) -> asyncio.Future:
+) -> List[TResult]:
     semaphore = asyncio.Semaphore(max_concurrency)
 
-    async def semaphore_task(task: asyncio.Task) -> Any:
+    async def semaphore_task(task: asyncio.Task[TResult]) -> TResult:
         async with semaphore:
             return await task
 

@@ -1,19 +1,18 @@
-from pathlib import Path
 import uuid
+from pathlib import Path
 
 import aiofiles
 from fastapi import UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from services.interfaces import ICreateFile, IExtractMetadata
-from models.file import File
-from schemas.files import CreateFileSchema, UploadedFile, FileMetadata
 from config import settings
-from utils.exceptions import Custom400Exception
-from utils.time import get_current_time
+from models.file import File
+from schemas.files import CreateFileSchema, FileMetadata, UploadedFile
+from services.interfaces import ICreateFile, IExtractMetadata
 from utils.decorators import session
-from utils.repo import IRepo
+from utils.exceptions import Custom400Exception
 from utils.random import random_string
+from utils.repo import IRepo
 
 
 class CreateFile(ICreateFile):

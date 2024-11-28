@@ -1,18 +1,8 @@
 from datetime import datetime
 from uuid import UUID as UUIDType
 
-from sqlalchemy import (
-    Boolean,
-    Table,
-    Column,
-    String,
-    DateTime,
-    func,
-    UUID,
-    BigInteger,
-)
+from sqlalchemy import UUID, BigInteger, Boolean, Column, DateTime, String, Table, func
 from sqlalchemy.orm import registry
-
 
 mapper_registry = registry()
 

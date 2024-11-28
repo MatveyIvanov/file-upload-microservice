@@ -8,14 +8,13 @@ from fastapi.responses import FileResponse, StreamingResponse
 from fastapi_versioning import version
 
 from config.di import Container
+from models.file import File
 from schemas.files import UploadedFile
 from services.interfaces import ICreateFile, ISaveFileToExternalStorage
-from models.file import File
 from utils.exceptions import Custom400Exception
 from utils.file import chunk_file
 from utils.repo import IRepo
 from utils.routing import APIRouter
-
 
 router = APIRouter(prefix="/uploads", tags=["uploads"])
 

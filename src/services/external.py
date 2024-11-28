@@ -1,8 +1,8 @@
-from aioboto3 import Session
 import aiofiles
+from aioboto3 import Session
 
-from services.interfaces import ISaveFileToExternalStorage
 from models.file import File
+from services.interfaces import ISaveFileToExternalStorage
 from utils.repo import IRepo
 
 
@@ -38,7 +38,7 @@ class SaveFileToS3(ISaveFileToExternalStorage):
                         file.path.strip("/"),
                     )
             return True
-        except Exception as e:
+        except Exception:
             # TODO: logging
             return False
 

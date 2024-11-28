@@ -1,16 +1,16 @@
-from typing import List
-from datetime import timedelta
-from aiofiles import os
 import asyncio
+from datetime import timedelta
+from typing import List
 
+from aiofiles import os
 from sqlalchemy import Result
 
-from services.interfaces import ICleanDisk
 from models.file import File
-from utils.sqlalchemy import IFilter, FilterSeq, mode, operator
+from services.interfaces import ICleanDisk
 from utils.asyncio import gather_with_concurrency
-from utils.time import get_current_time
 from utils.repo import IRepo
+from utils.sqlalchemy import FilterSeq, IFilter, mode, operator
+from utils.time import get_current_time
 
 
 class CleanDisk(ICleanDisk):
@@ -31,7 +31,7 @@ class CleanDisk(ICleanDisk):
         self.is_removed_from_disk_filter = is_removed_from_disk_filter
 
     async def __call__(self) -> None:
-        tasks = []
+        tasks: List[asyncio.Task[str | None]] = []
         for file in await self._get_files_for_cleanup():
             tasks.append(asyncio.Task(self._delete_from_disk(file[0])))
 
@@ -61,7 +61,7 @@ class CleanDisk(ICleanDisk):
         try:
             await os.remove(file.path)
             return file.uuid
-        except FileNotFoundError as e:
+        except FileNotFoundError:
             # TODO: Logging
             return None
 

@@ -17,7 +17,6 @@ from sqlalchemy import (
 
 from config.db import Base
 
-
 TModel = TypeVar("TModel", bound=Base)
 
 
@@ -108,7 +107,7 @@ class FilterSeq(IFilterSeq):
     def compile(self) -> ColumnElement[bool]:
         result = []
         for filter in self.filters:
-            if isinstance(filter, Filter):
+            if isinstance(filter, IFilter):
                 result.append(
                     _OPERATOR_TO_ORM[filter.operator_](
                         filter.column,

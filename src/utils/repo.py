@@ -2,20 +2,14 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict, Generic, List, Type, TypeVar
 
 from pydantic import BaseModel
-from sqlalchemy import (
-    Column,
-    Result,
-    Select,
-    delete,
-    select,
-    update,
-)
+from sqlalchemy import Column, Result, Select, delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from config.db import Base, Database
-from utils.sqlalchemy import IFilterSeq
-from utils.decorators import handle_orm_error, session as inject_session
+from utils.decorators import handle_orm_error
+from utils.decorators import session as inject_session
 from utils.shortcuts import get_object_or_404
+from utils.sqlalchemy import IFilterSeq
 
 TModel = TypeVar("TModel", bound=Base)
 TSchema = TypeVar("TSchema", bound=BaseModel)

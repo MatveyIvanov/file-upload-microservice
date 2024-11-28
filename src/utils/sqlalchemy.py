@@ -78,7 +78,6 @@ class IFilter(ABC, Generic[TModel]):
 class IFilterSeq(ABC):
     @abstractmethod
     def __init__(self, /, mode_: mode, *filters: IFilter | IFilterSeq): ...
-
     @abstractmethod
     def compile(self) -> ColumnElement[bool]: ...
 

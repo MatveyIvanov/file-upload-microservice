@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Any, Dict, Generic, List, Type, TypeVar
+from uuid import UUID
 
 from pydantic import BaseModel
 from sqlalchemy import Column, Result, Select, delete, select, update
@@ -17,25 +18,83 @@ TSchema = TypeVar("TSchema", bound=BaseModel)
 
 class IRepo(ABC, Generic[TModel]):
     @abstractmethod
-    def all_as_select(self) -> Select[TModel]: ...
+    def __init__(self, db: Database, model_class: Type[TModel], pk_field: str) -> None:
+        """
+        :param db: database client instance
+        :type db: Database
+        :param model_class: orm model class
+        :type model_class: Type[TModel]
+        :param pk_field: primary key field name
+        :type pk_field: str
+        """
+        ...
+
     @abstractmethod
-    async def all(self, *, session: AsyncSession = None) -> Result[TModel]: ...
+    def all_as_select(self) -> Select[TModel]:
+        """
+        Construct select object for all rows
+
+        :return: select object
+        :rtype: Select[TModel]
+        """
+        ...
+
+    @abstractmethod
+    async def all(self, *, session: AsyncSession = None) -> Result[TModel]:
+        """
+        Get all rows
+
+        :param session: orm session, defaults to None
+        :type session: AsyncSession, optional
+        :return: rows
+        :rtype: Result[TModel]
+        """
+        ...
+
     @abstractmethod
     async def get_by_id(
         self,
-        id_: int,  # TODO: generic or union type for id_
+        id_: int | str | UUID,
         *,
         for_update: bool = False,
         session: AsyncSession = None,
-    ) -> TModel: ...
+    ) -> TModel:
+        """
+        Get row by id
+
+        :param id_: identifier of an object
+        :type id_: int | str | UUID
+        :param for_update: lock for update, defaults to False
+        :type for_update: bool, optional
+        :param session: orm session, defaults to None
+        :type session: AsyncSession, optional
+        :return: row
+        :rtype: TModel
+        """
+        ...
+
     @abstractmethod
     async def get_by_ids(
         self,
-        ids: List[int],
+        ids: List[int | str | UUID],
         *,
         for_update: bool = False,
         session: AsyncSession = None,
-    ) -> Select[TModel]: ...
+    ) -> Select[TModel]:
+        """
+        Get rows by identifiers
+
+        :param ids: identifiers
+        :type ids: List[int  |  str  |  UUID]
+        :param for_update: lock for update, defaults to False
+        :type for_update: bool, optional
+        :param session: orm session, defaults to None
+        :type session: AsyncSession, optional
+        :return: rows
+        :rtype: Select[TModel]
+        """
+        ...
+
     @abstractmethod
     async def get_by_field(
         self,
@@ -44,7 +103,23 @@ class IRepo(ABC, Generic[TModel]):
         *,
         for_update: bool = False,
         session: AsyncSession = None,
-    ) -> TModel: ...
+    ) -> TModel:
+        """
+        Get row by field and its value
+
+        :param field: field name
+        :type field: str
+        :param value: value of a field
+        :type value: Any
+        :param for_update: lock for update, defaults to False
+        :type for_update: bool, optional
+        :param session: orm session, defaults to None
+        :type session: AsyncSession, optional
+        :return: row
+        :rtype: TModel
+        """
+        ...
+
     @abstractmethod
     async def get_by_filters(
         self,
@@ -52,7 +127,21 @@ class IRepo(ABC, Generic[TModel]):
         filters: IFilterSeq,
         for_update: bool = False,
         session: AsyncSession = None,
-    ) -> Result[TModel]: ...
+    ) -> Result[TModel]:
+        """
+        Get rows by filters
+
+        :param filters: filter sequence
+        :type filters: IFilterSeq
+        :param for_update: lock for update, defaults to False
+        :type for_update: bool, optional
+        :param session: orm session, defaults to None
+        :type session: AsyncSession, optional
+        :return: rows
+        :rtype: Result[TModel]
+        """
+        ...
+
     @abstractmethod
     async def exists_by_field(
         self,
@@ -60,14 +149,40 @@ class IRepo(ABC, Generic[TModel]):
         value: Any,
         *,
         session: AsyncSession = None,
-    ) -> bool: ...
+    ) -> bool:
+        """
+        Check if row exist by field and its value
+
+        :param field: field name
+        :type field: str
+        :param value: value
+        :type value: Any
+        :param session: orm session, defaults to None
+        :type session: AsyncSession, optional
+        :return: row existence
+        :rtype: bool
+        """
+        ...
+
     @abstractmethod
     async def create(
         self,
         entry: TSchema,
         *,
         session: AsyncSession = None,
-    ) -> TModel: ...
+    ) -> TModel:
+        """
+        Insert row
+
+        :param entry: entry with row data
+        :type entry: TSchema
+        :param session: orm session, defaults to None
+        :type session: AsyncSession, optional
+        :return: row
+        :rtype: TModel
+        """
+        ...
+
     @abstractmethod
     async def update(
         self,
@@ -75,22 +190,56 @@ class IRepo(ABC, Generic[TModel]):
         values: Dict,
         *,
         session: AsyncSession = None,
-    ) -> None: ...
+    ) -> None:
+        """
+        Update row
+
+        :param instance: row to update
+        :type instance: TModel
+        :param values: values to update
+        :type values: Dict
+        :param session: orm session, defaults to None
+        :type session: AsyncSession, optional
+        """
+        ...
+
     @abstractmethod
     async def multi_update(
         self,
-        ids: List[int],
+        ids: List[int | str | UUID],
         *,
         values: Dict[str, Any],
         session: AsyncSession = None,
-    ) -> None: ...
+    ) -> None:
+        """
+        Update multiple rows by identifiers
+
+        :param ids: identifiers
+        :type ids: List[int  |  str  |  UUID]
+        :param values: values to update
+        :type values: Dict[str, Any]
+        :param session: orm session, defaults to None
+        :type session: AsyncSession, optional
+        """
+        ...
+
     @abstractmethod
     async def delete(
         self,
         instance: TModel,
         *,
         session: AsyncSession = None,
-    ) -> None: ...
+    ) -> None:
+        """
+        Delete row
+
+        :param instance: row to delete
+        :type instance: TModel
+        :param session: orm session, defaults to None
+        :type session: AsyncSession, optional
+        """
+        ...
+
     @abstractmethod
     async def delete_by_field(
         self,
@@ -98,7 +247,18 @@ class IRepo(ABC, Generic[TModel]):
         value: Any,
         *,
         session: AsyncSession = None,
-    ) -> None: ...
+    ) -> None:
+        """
+        Delete row by field and its value
+
+        :param field: field name
+        :type field: str
+        :param value: value
+        :type value: Any
+        :param session: orm session, defaults to None
+        :type session: AsyncSession, optional
+        """
+        ...
 
 
 class Repo(IRepo[TModel]):

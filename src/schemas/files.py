@@ -4,6 +4,8 @@ from pydantic import UUID4, BaseModel
 
 
 class UploadedFile(BaseModel):
+    """Schema for uploaded file representation"""
+
     uuid: UUID4
     path: str
     size: int
@@ -15,6 +17,8 @@ class UploadedFile(BaseModel):
 
 
 class CreateFileSchema(BaseModel):
+    """Schema for file creation"""
+
     uuid: UUID4
     path: str
     size: int
@@ -24,6 +28,8 @@ class CreateFileSchema(BaseModel):
 
 
 class FileMetadata(BaseModel):
+    """Schema for file metadata"""
+
     size: int
     format: str
     name: str

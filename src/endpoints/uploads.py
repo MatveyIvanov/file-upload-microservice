@@ -29,7 +29,7 @@ async def upload_file(
     save_to_s3: ISaveFileToExternalStorage = Depends(
         Provide[Container.save_file_to_s3]
     ),
-):
+) -> UploadedFile:
     instance = await create_file(file)
     background_tasks.add_task(save_to_s3, instance.uuid)
     return instance
@@ -47,7 +47,7 @@ async def stream_upload_file(
     save_to_s3: ISaveFileToExternalStorage = Depends(
         Provide[Container.save_file_to_s3]
     ),
-):
+) -> UploadedFile:
     buffer = io.BytesIO()
     async for chunk in request.stream():
         buffer.write(chunk)

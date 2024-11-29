@@ -19,6 +19,14 @@ from utils.schemas import default_responses
 
 
 class APIRoute(_APIRoute):
+    """
+    This is an extended version of original APIRoute.
+
+    What's extended:
+        * Added default responses support
+        * Per route middleware support
+    """
+
     middleware: Sequence[Middleware] | None = None
 
     def __init__(
@@ -95,6 +103,14 @@ class APIRoute(_APIRoute):
 
 
 class APIRouter(_APIRouter):
+    """
+    This is an extended version of original APIRouter.
+
+    What's extended:
+        * Added default responses support
+        * Per route middleware support
+    """
+
     def __init__(
         self,
         *,

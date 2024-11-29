@@ -20,6 +20,10 @@ class Base(DeclarativeBase):
 
 
 class Database:
+    """
+    Database class for client management
+    """
+
     def __init__(self, db_url: str) -> None:
         self._engine = create_async_engine(db_url, future=True, echo=True)
         self._session_factory = async_scoped_session(
@@ -37,6 +41,10 @@ class Database:
 
     @asynccontextmanager
     async def session(self) -> AsyncIterator[AsyncSession]:
+        """
+        Context manager that produces async session.
+        Handles commits, rollbacks and session closing.
+        """
         session: AsyncSession = self._session_factory()
         try:
             logging.debug("YIELDING...")
@@ -51,6 +59,8 @@ class Database:
             raise
         else:
             logging.debug("EXPUNGING...")
+            # we want all objects to be
+            # usable outside of the session
             session.expunge_all()
             logging.debug("COMMITTING... ")
             try:

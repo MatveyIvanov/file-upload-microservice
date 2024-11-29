@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from datetime import timedelta
 from typing import List
 
@@ -13,6 +14,9 @@ from utils.sqlalchemy import FilterSeq, IFilter, mode, operator
 from utils.time import get_current_time
 
 
+logger = logging.getLogger("cleanup")
+
+
 class CleanDisk(ICleanDisk):
     def __init__(
         self,
@@ -22,7 +26,7 @@ class CleanDisk(ICleanDisk):
         created_at_filter: IFilter[File],
         updated_at_filter: IFilter[File],
         is_removed_from_disk_filter: IFilter[File],
-    ):
+    ) -> None:
         self.max_days = max_days
         self.max_days_unused = max_days_unused
         self.repo = repo
@@ -35,6 +39,8 @@ class CleanDisk(ICleanDisk):
         for file in await self._get_files_for_cleanup():
             tasks.append(asyncio.Task(self._delete_from_disk(file[0])))
 
+        # no need to do it in specific order synchronously,
+        # just gather and get all results
         result = await gather_with_concurrency(tasks)
         if result:
             await self._update_in_db(list(uuid for uuid in result if uuid is not None))
@@ -62,7 +68,10 @@ class CleanDisk(ICleanDisk):
             await os.remove(file.path)
             return file.uuid
         except FileNotFoundError:
-            # TODO: Logging
+            logger.error(
+                "Error cleaning disk from file.",
+                extra={"uuid": file.uuid, "path": file.path},
+            )
             return None
 
     async def _update_in_db(self, uuids: List[str]) -> None:

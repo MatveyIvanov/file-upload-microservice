@@ -33,6 +33,13 @@ from utils.routing import APIRouter
 
 
 class FastAPI(_FastAPI):
+    """
+    This is an extended version of original FastAPI app.
+
+    What's extended:
+        * Custom APIRouter class
+    """
+
     def __init__(
         self: AppType,
         *,

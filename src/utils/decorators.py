@@ -1,6 +1,6 @@
 import functools
 import logging
-from typing import Any, Callable, Iterable
+from typing import Any, Callable
 
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -8,25 +8,17 @@ orm_logger = logging.getLogger("orm")
 common_logger = logging.getLogger("common")
 
 
-def apply_tags(tags: Iterable[str]):
+def handle_orm_error(func: Callable) -> Callable:
     """
-    Декоратор используется для добавления тегов к роутерам
+    Decorator that handles any sqlalchemy error and logs this error
+
+    :param func: function to decorate
+    :type func: Callable
+    :return: decorated function
+    :rtype: Callable
     """
 
-    def outer(func):
-        def inner(*args, **kwargs):
-            routers = func(*args, **kwargs)
-            for router in routers:
-                router.tags = list(set([*(router.tags or list()), *tags]))
-            return routers
-
-        return inner
-
-    return outer
-
-
-def handle_orm_error(func):
-    def wrapper(*args, **kwargs):
+    def wrapper(*args: Any, **kwargs: Any) -> Any:
         try:
             return func(*args, **kwargs)
         except SQLAlchemyError as e:
@@ -44,7 +36,18 @@ def handle_any_error(
     func: Callable | None = None,
     *,
     logger: logging.Logger = common_logger,
-):
+) -> Callable:
+    """
+    Decorator that handles any error and logs this error to specified logger
+
+    :param func: function to decorate, defaults to None
+    :type func: Callable | None, optional
+    :param logger: logger for errors, defaults to common_logger
+    :type logger: logging.Logger, optional
+    :return: decorated function
+    :rtype: Callable
+    """
+
     def decorator(func: Callable) -> Callable:
         @functools.wraps(func)
         async def wrapper(*args: Any, **kwargs: Any) -> Any:
@@ -66,7 +69,17 @@ def handle_any_error(
     return decorator
 
 
-def session(func) -> Callable:
+def session(func: Callable) -> Callable:
+    """
+    Decorator that injects session as `session` kwarg.
+    If session already in kwargs, new session will not be injected
+
+    :param func: function to decorate
+    :type func: Callable
+    :return: decorated function
+    :rtype: Callable
+    """
+
     async def wrapper(*args: Any, **kwargs: Any) -> Any:
         from config.di import Container
 

@@ -13,7 +13,6 @@ from utils.repo import IRepo
 from utils.sqlalchemy import FilterSeq, IFilter, mode, operator
 from utils.time import get_current_time
 
-
 logger = logging.getLogger("cleanup")
 
 

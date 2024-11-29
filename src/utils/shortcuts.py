@@ -1,6 +1,6 @@
 from typing import TypeVar
-from utils.exceptions import Custom404Exception
 
+from utils.exceptions import Custom404Exception
 
 T = TypeVar("T")
 

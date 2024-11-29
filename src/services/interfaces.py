@@ -6,8 +6,8 @@ from boto3 import Session
 from fastapi import UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from schemas.files import FileMetadata, UploadedFile
 from models.file import File
+from schemas.files import FileMetadata, UploadedFile
 from utils.repo import IRepo
 from utils.sqlalchemy import IFilter
 

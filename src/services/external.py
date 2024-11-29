@@ -1,11 +1,11 @@
 import logging
+
 import aiofiles
 from aioboto3 import Session
 
 from models.file import File
 from services.interfaces import ISaveFileToExternalStorage
 from utils.repo import IRepo
-
 
 logger = logging.getLogger("s3")
 

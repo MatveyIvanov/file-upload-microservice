@@ -82,10 +82,12 @@ class ISaveFileToExternalStorage(ABC):
         ...
 
     @abstractmethod
-    async def __call__(self, uuid: str) -> None:
+    async def __call__(self, uuid: str) -> bool:
         """
         :param uuid: uuid of a file
         :type uuid: str
+        :return: flat whether file is saved to s3 or not
+        :rtype: bool
         """
         ...
 

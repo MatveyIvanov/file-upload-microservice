@@ -1,7 +1,7 @@
 import asyncio
 import logging
 from datetime import timedelta
-from typing import List
+from typing import List, Type
 
 from aiofiles import os
 from sqlalchemy import Result
@@ -25,7 +25,7 @@ class CleanDisk(ICleanDisk):
         created_at_filter: IFilter[File],
         updated_at_filter: IFilter[File],
         is_removed_from_disk_filter: IFilter[File],
-        filter_seq_class: IFilterSeq,
+        filter_seq_class: Type[IFilterSeq],
     ) -> None:
         self.max_days = max_days
         self.max_days_unused = max_days_unused
@@ -67,7 +67,7 @@ class CleanDisk(ICleanDisk):
     async def _delete_from_disk(self, file: File) -> str | None:
         try:
             await os.remove(file.path)
-            return file.uuid
+            return str(file.uuid)
         except FileNotFoundError:
             logger.error(
                 "Error cleaning disk from file.",

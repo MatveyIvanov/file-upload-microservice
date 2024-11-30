@@ -56,7 +56,7 @@ class TestCleanDisk:
             filters=clean_disk.filter_seq_class.return_value
         ),
         clean_disk.repo.multi_update.assert_called_once_with(
-            [file.uuid] if file_exists else [],
+            [str(file.uuid)] if file_exists else [],
             values={"is_removed_from_disk": True},
         )
         os_mock.remove.assert_called_once_with(file.path)

@@ -70,16 +70,72 @@ class IFilter(ABC, Generic[TModel]):
     operator_: operator
 
     @abstractmethod
-    def __init__(self, model: Type[TModel], column_name: str) -> None: ...
+    def __init__(self, model_class: Type[TModel], column_name: str) -> None:
+        """
+        :param model_class: orm model class
+        :type model_class: Type[TModel]
+        :param column_name: name of the column
+        :type column_name: str
+        """
+        ...
+
     @abstractmethod
-    def __call__(self, value: Any, operator_: operator = operator.eq) -> IFilter: ...
+    def __call__(self, value: Any, operator_: operator = operator.eq) -> IFilter:
+        """
+        Finish construction of the object.
+        This is a 2-step construction mostly because of DI.
+
+        :param value: value to filter against
+        :type value: Any
+        :param operator_: operator for filtering, defaults to operator.eq
+        :type operator_: operator, optional
+        :return: completed filter object
+        :rtype: IFilter
+
+        ### Examples
+        ```
+        uuid_filter = Filter(File, "uuid")([str(uuid4()), str(uuid4())], operator.in_)
+        ```
+        """
 
 
 class IFilterSeq(ABC):
     @abstractmethod
-    def __init__(self, /, mode_: mode, *filters: IFilter | IFilterSeq): ...
+    def __init__(self, /, mode_: mode, *filters: IFilter | IFilterSeq):
+        """
+        :param mode_: condition type between passed filters
+        :type mode_: mode
+        :param *filters: filters/filter sequences to build sequence from
+        :type *filters: Tuple[IFilter | IFilterSeq, ...]
+
+        ### Examples
+        1. Multiple filters
+        ```
+        FilterSeq(mode.and_, uuid_filter("uuid"), path_filter("path"))
+        ```
+        2. Filter + Sequence
+        ```
+        filter_seq = FilterSeq(mode.and_, uuid_filter("uuid"), path_filter("path"))
+        FilterSeq(mode.or_, created_at_filter(now), filter_seq)
+        ```
+        3. Sequences
+        ```
+        filter_seq_1 = FilterSeq(mode.and_, uuid_filter("uuid1"), path_filter("path1"))
+        filter_seq_2 = FilterSeq(mode.and_, uuid_filter("uuid2"), path_filter("path2"))
+        FilterSeq(mode.or_, filter_seq_1, filter_seq_2)
+        ```
+        """
+        ...
+
     @abstractmethod
-    def compile(self) -> ColumnElement[bool]: ...
+    def compile(self) -> ColumnElement[bool]:
+        """
+        Compiles filters to boolean column element
+
+        :return: final orm column element to filter against
+        :rtype: ColumnElement[bool]
+        """
+        ...
 
 
 class Filter(IFilter[TModel]):

@@ -8,7 +8,7 @@ import traceback
 from pathlib import Path
 from typing import Dict, Union
 
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from config import settings
 
@@ -36,7 +36,7 @@ BUILTIN_RECORD_ATTRS_TO_IGNORE = set(
 
 class BaseJsonLogSchema(BaseModel):
     """
-    Схема основного тела лога в формате JSON
+    Base json log schema
     """
 
     model_config = ConfigDict(extra="allow", populate_by_name=True)
@@ -59,7 +59,7 @@ class BaseJsonLogSchema(BaseModel):
 
 class RequestJsonLogSchema(BaseModel):
     """
-    Схема части запросов-ответов лога в формате JSON
+    Request/Response part of the log schema
     """
 
     request_uri: str
@@ -83,16 +83,15 @@ class RequestJsonLogSchema(BaseModel):
 
 
 class JSONLogFormatter(logging.Formatter):
-    """
-    Кастомизированный класс-форматер для логов в формате json
-    """
-
     def format(self, record: logging.LogRecord, *args, **kwargs) -> str:
         """
-        Преобразование объект журнала в json
+        Format log record to json.
+        Log is filtered against sensitive fields.
 
-        :param record: объект журнала
-        :return: строка журнала в JSON формате
+        :param record: log record
+        :type record: logging.LogRecord
+        :return: json string
+        :rtype: str
         """
         log_object = self._format_log_object(record)
         log_object = self._filter_sensitive_fields(log_object)
@@ -101,11 +100,12 @@ class JSONLogFormatter(logging.Formatter):
     @staticmethod
     def _format_log_object(record: logging.LogRecord) -> Dict:
         """
-        Перевод записи объекта журнала
-        в json формат с необходимым перечнем полей
+        Log record to JSON schema convertation
 
-        :param record: объект журнала
-        :return: Словарь с объектами журнала
+        :param record: log record
+        :type record: logging.LogRecord
+        :return: dictionary with target schema
+        :rtype: Dict
         """
         now = (
             datetime.datetime.fromtimestamp(record.created)
@@ -115,7 +115,6 @@ class JSONLogFormatter(logging.Formatter):
         )
         message = record.getMessage()
         duration = record.duration if hasattr(record, "duration") else record.msecs
-        # Инициализация тела журнала
         json_log_fields = BaseJsonLogSchema(
             thread=record.process,
             timestamp=now,
@@ -143,12 +142,11 @@ class JSONLogFormatter(logging.Formatter):
 
         elif record.exc_text:
             json_log_fields.exceptions = record.exc_text
-        # Преобразование Pydantic объекта в словарь
+
         json_log_object = json_log_fields.model_dump(
             exclude_unset=True,
             by_alias=True,
         )
-        # Соединение дополнительных полей логирования
         if hasattr(record, "request_json_fields"):
             json_log_object.update(record.request_json_fields)
 
@@ -156,6 +154,15 @@ class JSONLogFormatter(logging.Formatter):
 
     @staticmethod
     def _filter_sensitive_fields(data: Dict) -> Dict:
+        """
+        Filter sensitive data from log dictionary
+
+        :param data: log dictionary
+        :type data: Dict
+        :return: filtered log dictionary
+        :rtype: Dict
+        """
+
         def _filter_dict(data: Dict):
             new_data = {}
             for k, v in data.items():
@@ -198,8 +205,6 @@ def get_config(log_path: str) -> Dict:
             "level": "DEBUG" if settings.DEBUG else "ERROR",
             "propagate": False,
         },
-        # Не даем стандартному логгеру fastapi работать
-        # по пустякам и замедлять работу сервиса
         "uvicorn.access": {
             "handlers": ["uvicorn"],
             "level": "DEBUG" if settings.DEBUG else "ERROR",

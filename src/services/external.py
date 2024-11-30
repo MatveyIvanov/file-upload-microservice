@@ -1,9 +1,13 @@
+import logging
+
 import aiofiles
 from aioboto3 import Session
 
 from models.file import File
 from services.interfaces import ISaveFileToExternalStorage
 from utils.repo import IRepo
+
+logger = logging.getLogger("s3")
 
 
 class SaveFileToS3(ISaveFileToExternalStorage):
@@ -13,7 +17,7 @@ class SaveFileToS3(ISaveFileToExternalStorage):
         boto3: Session,
         endpoint_url: str,
         bucket: str,
-    ):
+    ) -> None:
         self.repo = repo
         self.boto3 = boto3
         self.endpoint_url = endpoint_url
@@ -38,8 +42,11 @@ class SaveFileToS3(ISaveFileToExternalStorage):
                         file.path.strip("/"),
                     )
             return True
-        except Exception:
-            # TODO: logging
+        except Exception as e:
+            logger.critical(
+                f"Error saving a file to s3. - {str(e)}",
+                extra={"uuid": file.uuid, "path": file.path},
+            )
             return False
 
     async def _update_file(self, file: File) -> None:

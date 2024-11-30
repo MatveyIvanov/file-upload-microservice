@@ -21,28 +21,36 @@ class CustomException(HTTPException):
 
 class Custom400Exception(CustomException):
     def __init__(
-        self, detail: Any = None, headers: Dict[str, str] | None = None
+        self,
+        detail: Any = None,
+        headers: Dict[str, str] | None = None,
     ) -> None:
         super().__init__(status.HTTP_400_BAD_REQUEST, detail, headers)
 
 
 class Custom401Exception(CustomException):
     def __init__(
-        self, detail: Any = None, headers: Dict[str, str] | None = None
+        self,
+        detail: Any = None,
+        headers: Dict[str, str] | None = None,
     ) -> None:
         super().__init__(status.HTTP_401_UNAUTHORIZED, detail, headers)
 
 
 class Custom403Exception(CustomException):
     def __init__(
-        self, detail: Any = None, headers: Dict[str, str] | None = None
+        self,
+        detail: Any = None,
+        headers: Dict[str, str] | None = None,
     ) -> None:
         super().__init__(status.HTTP_403_FORBIDDEN, detail, headers)
 
 
 class Custom404Exception(CustomException):
     def __init__(
-        self, detail: Any = None, headers: Dict[str, str] | None = None
+        self,
+        detail: Any = None,
+        headers: Dict[str, str] | None = None,
     ) -> None:
         super().__init__(status.HTTP_404_NOT_FOUND, detail, headers)
 
@@ -57,7 +65,8 @@ def custom_exception_handler(request: Request, exc: HTTPException) -> Response:
 
 
 async def request_validation_exception_handler(
-    request: Request, exc: RequestValidationError
+    request: Request,
+    exc: RequestValidationError,
 ) -> JSONResponse:
     errors = {}
     for error in exc._errors:

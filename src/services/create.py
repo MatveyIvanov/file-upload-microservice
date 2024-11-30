@@ -53,7 +53,7 @@ class CreateFile(ICreateFile):
 
     def _validate_metadata(self, metadata: FileMetadata) -> None:
         if metadata.size > settings.UPLOAD_MAX_SIZE_IN_BYTES:
-            raise Custom400Exception("Размер файла превышает лимит.")
+            raise Custom400Exception("Exceeded file limit.")
 
     async def _save_to_disk(self, file: UploadFile, metadata: FileMetadata) -> str:
         path = str(Path(self.base_path, f"{random_string()}.{metadata.ext}"))

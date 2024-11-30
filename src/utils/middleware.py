@@ -11,7 +11,7 @@ from starlette.types import Scope
 from config.settings import PORT
 from utils.logging import EMPTY_VALUE, RequestJsonLogSchema
 
-requests_logger = logging.getLogger("requests")
+http_logger = logging.getLogger("http")
 
 
 def headers_from_scope(scope: Scope) -> Dict:
@@ -19,11 +19,6 @@ def headers_from_scope(scope: Scope) -> Dict:
 
 
 class LoggingMiddleware:
-    """
-    Middleware для обработки запросов и ответов
-    с целью журналирования (https://habr.com/ru/articles/575454/)
-    """
-
     @staticmethod
     async def get_protocol(request: Request) -> str:
         protocol = str(request.scope.get("type", ""))
@@ -101,7 +96,7 @@ class LoggingMiddleware:
             response_body_map = json.loads(response_body_str)
         except json.JSONDecodeError:
             response_body_map = None
-        # Инициализация и формирования полей для запроса-ответа
+
         request_json_fields = RequestJsonLogSchema(
             request_uri=str(request.url),
             request_referer=request_headers.get("referer", EMPTY_VALUE),
@@ -124,12 +119,12 @@ class LoggingMiddleware:
         ).model_dump()
 
         message = (
-            f'{"Ошибка" if exception_object else "Ответ"} '
-            f"с кодом {response.status_code} "
-            f'на запрос {request.method} "{str(request.url)}", '
-            f"за {duration} мс"
+            f'{"Error" if exception_object else "Response"} '
+            f"with code {response.status_code} "
+            f'for request {request.method} "{str(request.url)}", '
+            f"in {duration} ms"
         )
-        getattr(requests_logger, "error" if exception_object else "info")(
+        getattr(http_logger, "error" if exception_object else "info")(
             message,
             extra={
                 "request_json_fields": request_json_fields,

@@ -5,7 +5,6 @@ import aiofiles
 from fastapi import UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from config import settings
 from models.file import File
 from schemas.files import CreateFileSchema, FileMetadata, UploadedFile
 from services.interfaces import ICreateFile, IExtractMetadata
@@ -19,10 +18,12 @@ class CreateFile(ICreateFile):
     def __init__(
         self,
         base_path: str,
+        max_bytes: int,
         repo: IRepo[File],
         extract_metadata: IExtractMetadata,
     ) -> None:
         self.base_path = base_path
+        self.max_bytes = max_bytes
         self.repo = repo
         self.extract_metadata = extract_metadata
 
@@ -52,7 +53,7 @@ class CreateFile(ICreateFile):
         return self.extract_metadata(file)
 
     def _validate_metadata(self, metadata: FileMetadata) -> None:
-        if metadata.size > settings.UPLOAD_MAX_SIZE_IN_BYTES:
+        if metadata.size > self.max_bytes:
             raise Custom400Exception("Exceeded file limit.")
 
     async def _save_to_disk(self, file: UploadFile, metadata: FileMetadata) -> str:

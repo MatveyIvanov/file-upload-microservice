@@ -13,6 +13,7 @@ from schemas.files import UploadedFile
 from services.interfaces import ICreateFile, ISaveFileToExternalStorage
 from utils.exceptions import Custom400Exception
 from utils.file import chunk_file
+from utils.http import safe_filename
 from utils.repo import IRepo
 from utils.routing import APIRouter
 
@@ -113,7 +114,9 @@ async def download_file(
         raise Custom400Exception("File is not available for download.")
     return FileResponse(
         file.path,
-        headers={"Content-Disposition": f'attachment; filename="{file.name}"'},
+        headers={
+            "Content-Disposition": f'attachment; filename="{safe_filename(file.name)}"'
+        },
         media_type="application/octet-stream",
         filename=file.name,
     )
@@ -147,6 +150,8 @@ async def stream_file(
         raise Custom400Exception("File is not available for download.")
     return StreamingResponse(
         chunk_file(file.path),
-        headers={"Content-Disposition": f'attachment; filename="{file.name}"'},
+        headers={
+            "Content-Disposition": f'attachment; filename="{safe_filename(file.name)}"'
+        },
         media_type="application/octet-stream",
     )

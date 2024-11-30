@@ -1,5 +1,6 @@
 from datetime import timedelta
 from unittest import mock
+
 import pytest
 
 from utils.sqlalchemy import mode, operator

@@ -1,16 +1,16 @@
+import uuid
 from datetime import datetime
 from unittest import mock
-import uuid
+
 import pytest
 
 from config.di import get_di_test_container
 from models.file import File
-from services.clean import CleanDisk
 from schemas.files import FileMetadata
+from services.clean import CleanDisk
 from services.create import CreateFile
 from services.external import SaveFileToS3
 from services.extract import ExtractMetadata
-
 
 __container = get_di_test_container()
 

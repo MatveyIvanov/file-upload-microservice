@@ -1,6 +1,7 @@
 import io
-from fastapi import UploadFile
+
 import pytest
+from fastapi import UploadFile
 
 from schemas.files import FileMetadata
 

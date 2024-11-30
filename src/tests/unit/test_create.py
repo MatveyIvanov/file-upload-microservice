@@ -1,9 +1,10 @@
 import io
+import uuid
 from pathlib import Path
 from unittest import mock
-import uuid
-from fastapi import UploadFile
+
 import pytest
+from fastapi import UploadFile
 
 from schemas.files import CreateFileSchema, UploadedFile
 from utils.exceptions import Custom400Exception

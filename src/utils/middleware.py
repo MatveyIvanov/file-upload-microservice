@@ -119,10 +119,10 @@ class LoggingMiddleware:
         ).model_dump()
 
         message = (
-            f'{"Ошибка" if exception_object else "Ответ"} '
-            f"с кодом {response.status_code} "
-            f'на запрос {request.method} "{str(request.url)}", '
-            f"за {duration} мс"
+            f'{"Error" if exception_object else "Response"} '
+            f"with code {response.status_code} "
+            f'for request {request.method} "{str(request.url)}", '
+            f"in {duration} ms"
         )
         getattr(http_logger, "error" if exception_object else "info")(
             message,

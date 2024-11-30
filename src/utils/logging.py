@@ -205,8 +205,6 @@ def get_config(log_path: str) -> Dict:
             "level": "DEBUG" if settings.DEBUG else "ERROR",
             "propagate": False,
         },
-        # Не даем стандартному логгеру fastapi работать
-        # по пустякам и замедлять работу сервиса
         "uvicorn.access": {
             "handlers": ["uvicorn"],
             "level": "DEBUG" if settings.DEBUG else "ERROR",

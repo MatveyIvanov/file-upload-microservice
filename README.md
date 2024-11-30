@@ -1,10 +1,10 @@
 # FastAPI Template
-![Static Badge](https://img.shields.io/badge/python-...-brightgreen?style=flat&logo=python)
-![Static Badge](https://img.shields.io/badge/FastAPI-...-brightgreen?style=flat&logo=python)
-![Static Badge](https://img.shields.io/badge/coverage-0%-red?style=flat&logo=pytest)
-![Static Badge](https://img.shields.io/badge/tests-failing-red?style=flat&logo=pytest)
-![Static Badge](https://img.shields.io/badge/flake8-failing-red?style=flat&logo=python)
-![Static Badge](https://img.shields.io/badge/mypy-failing-red?style=flat&logo=python)
+![Static Badge](https://img.shields.io/badge/python-3.11-brightgreen?style=flat&logo=python)
+![Static Badge](https://img.shields.io/badge/FastAPI-0.112.0-brightgreen?style=flat&logo=python)
+![Static Badge](https://img.shields.io/badge/coverage-0%-brightgreen?style=flat&logo=pytest)
+![Static Badge](https://img.shields.io/badge/tests-passing-brightgreen?style=flat&logo=pytest)
+![Static Badge](https://img.shields.io/badge/flake8-passing-brightgreen?style=flat&logo=python)
+![Static Badge](https://img.shields.io/badge/mypy-passing-brightgreen?style=flat&logo=python)
 
 ## Оглавление
 * [Разворачивание проекта](#разворачивание-проекта)
@@ -51,8 +51,6 @@
 Окружение (development, production, testing, etc). Может быть использовано для различных нужд в рамках проекта
 #### PROJECT_NAME
 Название проекта
-#### SECRET_KEY
-Секретный ключ для FastAPI
 #### DEBUG
 Режим отладки<br>
 0 - выключен<br>
@@ -66,7 +64,6 @@
 1 - включен<br>
 Если выключен, то:
 * Будет доступна документация swagger-ui/redoc
-* Работа с платежными системами будет работать в боевом режиме
 * Чувствительные данные будут исключены из логов
 #### MEDIA_PATH
 Путь к директории, в которой хранятся медиа-файлы
@@ -78,8 +75,6 @@
 Префикс в ссылке для статических-файлов
 #### LOG_PATH
 Путь к директории, в которой хранятся лог-файлы
-#### IN_GUNICORN
-Флаг, который определяет, запускается ли проект через gunicorn
 #### Database
 При первом запуске DB_NAME, DB_USER, DB_PASSWORD могут быть любыми<br>
 При дальнейших запусках DB_NAME, DB_USER, DB_PASSWORD должны быть такими же, как при первом запуске<br>
@@ -103,7 +98,14 @@ ASGI_TARGET - образ для сборки asgi сервиса<br>
 *_CPUS - лимит ядер на контейнер<br>
 *_MEM_LIMIT - лимит памяти на контейнер<br>
 *_MEM_RESERVATION - запас памяти на контейнер<br>
-
+#### UPLOAD_MAX_SIZE_IN_BYTES
+Максимальный размер загружаемого файла в байтах
+# S3
+Доступы к S3-хранилищу
+# Scheduler
+SCHEDULER_DISK_CLEANUP_EVERY - очищать диск каждые n минут
+SCHEDULER_REMOVE_FILES_OLDER_THAN - удалять файлы через n дней после создания<br>
+SCHEDULER_REMOVE_FILES_UNUSED_MORE_THAN - удалять файлы через n дней после последнего обновления<br>
 </p>
 </details>
 
@@ -148,24 +150,23 @@ docker compose
 
 ## Стэк
 ### Основные инструменты
-* Используемый язык программирования — `Python ...`
-* Используемый фреймворк — `FastAPI ...`
-* Используемая СУБД — `PostgreSQL ...`
+* Используемый язык программирования — `Python 3.11`
+* Используемый фреймворк — `FastAPI 0.112.0`
+* Используемая СУБД — `PostgreSQL 14.5`
 ### Другие библиотеки / интеграции
-* `uvicorn (...)` — HTTP-сервер для FastAPI
-* `psycopg (...)` — библиотека для работы с PostgreSQL в Python
-* `redis (...)` — библиотека для работы с Redis в Python
-* `JSON-log-formatter (...)` — библиотека для форматирования логов в JSON-формате
-* `dependency-injector (...)` — библиотека для внедрения зависимостей (DI)
-* `pytest (...)` — библиотека для тестирования
-* `pytest-cov (...)` — библиотека для оценки покрытия кода тестами через pytest
-* `pytest-mock (...)` — библиотека для мока зависимостей через pytest
-* `pytest-timeout (...)` — библиотека для ограничения времени выполнения тестов через pytest 
-* `concurrent-log-handler (...)` — библиотека для последовательной записи логов в файлы при запуске веб приложения через несколько воркеров (как в uvicorn)
-* `mypy (...)` — статический анализатор типов
-* `flake8 (...)` — инструмент линтинга для Python
-* `black (...)` — библиотека для форматирования кода на языке Python
-* `isort (...)` - библиотека для сортировки импортов
+* `uvicorn (0.30.5)` — HTTP-сервер для FastAPI
+* `psycopg (2.9.7)` — библиотека для работы с PostgreSQL в Python
+* `JSON-log-formatter (1.0)` — библиотека для форматирования логов в JSON-формате
+* `dependency-injector (4.41.0)` — библиотека для внедрения зависимостей (DI)
+* `pytest (8.2.1)` — библиотека для тестирования
+* `pytest-cov (5.0.0)` — библиотека для оценки покрытия кода тестами через pytest
+* `pytest-mock (3.14.0)` — библиотека для мока зависимостей через pytest
+* `pytest-timeout (2.3.1)` — библиотека для ограничения времени выполнения тестов через pytest 
+* `concurrent-log-handler (0.9.25)` — библиотека для последовательной записи логов в файлы при запуске веб приложения через несколько воркеров (как в uvicorn)
+* `mypy (1.10.0)` — статический анализатор типов
+* `flake8 (7.1.0)` — инструмент линтинга для Python
+* `black (24.4.2)` — библиотека для форматирования кода на языке Python
+* `isort (5.13.2)` - библиотека для сортировки импортов
 
 ## Запуск тестов
 ### Внутри Docker-контейнера (рекомендуется)
@@ -211,7 +212,7 @@ make test
 
 или
 ```bash
-make flake8
+make lint
 ```
 
 ### Вне Docker-контейнера
@@ -238,7 +239,7 @@ make flake8
 
 или
 ```bash
-make mypy
+make typecheck
 ```
 
 ### Вне Docker-контейнера
@@ -323,47 +324,6 @@ poetry run pre-commit uninstall -t pre-push
 ```bash
 make test
 ```
-### Git Flow
-Основные правила работы с ветками на проекте:
-* `develop` — ветка разработки.
-    * Собирается и разворачивается на dev-сервере;
-* `feature/{feature-slug}` — feature-ветка.
-    * Создается **только** из ветки develop;
-    * По готовности создается MR в ветку develop.
-* `bugfix/{bug-slug}` — bugfix-ветка.
-    * Создается **только** из ветки develop;
-    * По готовности создается MR в ветку develop.
-* `release/{major}.{minor}` — release-ветка.
-    * Создается **только** из ветки develop;
-    * Считается как release-candidate;
-    * Собирается и разворачивается на stage-сервере (пока не утверждено, как вариант);
-    * Прямо в ветке могут быть пофикшены баги, без MR;
-    * Все пофикшенные в ветке баги должны быть смержены в develop, желательно сразу по готовности бага, чтобы не упустить фикс;
-    * По готовности создается MR в ветку main.
-    * Правила изменения версии релиза:
-        * `minor` версия увеличивается при изменениях, не нарушающих обратную совместимость. Т.е. при этих изменениях пользователи API продолжат работу без необходимости вносить изменения;
-        * `major` версия увеличивается при изменениях, нарушающих обратную совместимость.
-            * **В идеале, major версия должна совпадать с последней версией API, т.к. новая версия API внедряется по такому же принципу - при появлении изменений, нарушающих обратную совместимость.**
-* `hotfix/{bug-slug}` — hotfix-ветка.
-    * Создается **только** из ветки main;
-    * По готовности создается MR в ветку main.
-* `main` — прод ветка.
-    * Собирается и разворачивается на prod-сервере;
-    * После слияния MR в эту ветку создается tag и release по этой ветке (т.е. по последнему коммиту этой ветки).
-
-### CI/CD
-
-#### Dev-сервер
-TBD
-
-#### Prod-сервер
-TBD
-
-#### Release ветки
-TBD
-
-### Выпуск релиза
-TBD
 
 ### CHANGELOG.md
 **Заметки о релизах ведутся начиная с версии `1.0.0`**
@@ -406,4 +366,3 @@ Bugfixes:
   - 
 
 ```
-

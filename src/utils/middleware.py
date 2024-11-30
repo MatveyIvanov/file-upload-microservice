@@ -57,7 +57,7 @@ class LoggingMiddleware:
             await self.set_body(request, raw_request_body)
             request_body = await self.get_body(request)
         except Exception:
-            request_body = EMPTY_VALUE
+            request_body = dict()
 
         server: tuple = request.get("server", ("localhost", PORT))
         request_headers: dict = dict(request.headers.items())

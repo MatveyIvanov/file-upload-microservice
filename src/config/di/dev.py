@@ -6,7 +6,7 @@ from config.db import Database
 from models.file import File
 from services import *
 from utils.repo import Repo
-from utils.sqlalchemy import Filter
+from utils.sqlalchemy import Filter, FilterSeq
 
 
 class Container(containers.DeclarativeContainer):
@@ -47,6 +47,7 @@ class Container(containers.DeclarativeContainer):
     create_file = providers.Singleton(
         CreateFile,
         base_path=settings.MEDIA_ROOT,
+        max_bytes=settings.UPLOAD_MAX_SIZE_IN_BYTES,
         repo=file_repo,
         extract_metadata=extract_metadata,
     )
@@ -65,4 +66,5 @@ class Container(containers.DeclarativeContainer):
         created_at_filter=file_created_at_filter,
         updated_at_filter=file_updated_at_filter,
         is_removed_from_disk_filter=file_is_removed_from_disk_filter,
+        filter_seq_class=FilterSeq,
     )

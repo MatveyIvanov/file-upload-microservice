@@ -13,7 +13,7 @@ mainup:
 mainbuild:
 	docker compose -f docker/docker-compose.main.yml build --no-cache
 test:
-	docker exec -it $(PROJECT_NAME)-asgi pytest .
+	docker exec -it $(PROJECT_NAME)-asgi pytest tests
 lint:
 	docker exec -it $(PROJECT_NAME)-asgi flake8 .
 typecheck:

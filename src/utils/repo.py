@@ -6,13 +6,13 @@ from pydantic import BaseModel
 from sqlalchemy import Column, Result, Select, delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from config.db import Base, Database
+from config.db import Database
 from utils.decorators import handle_orm_error
 from utils.decorators import session as inject_session
 from utils.shortcuts import get_object_or_404
 from utils.sqlalchemy import IFilterSeq
 
-TModel = TypeVar("TModel", bound=Base)
+TModel = TypeVar("TModel")
 TSchema = TypeVar("TSchema", bound=BaseModel)
 
 
@@ -206,7 +206,7 @@ class IRepo(ABC, Generic[TModel]):
     @abstractmethod
     async def multi_update(
         self,
-        ids: List[int | str | UUID],
+        ids: List[int] | List[str] | List[UUID],
         *,
         values: Dict[str, Any],
         session: AsyncSession = None,
@@ -394,7 +394,7 @@ class Repo(IRepo[TModel]):
     @inject_session
     async def multi_update(
         self,
-        ids: List[int],
+        ids: List[int] | List[str] | List[UUID],
         *,
         values: Dict[str, Any],
         session: AsyncSession = None,

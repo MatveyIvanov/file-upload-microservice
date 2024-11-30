@@ -15,9 +15,7 @@ from sqlalchemy import (
     or_,
 )
 
-from config.db import Base
-
-TModel = TypeVar("TModel", bound=Base)
+TModel = TypeVar("TModel")
 
 
 class operator(IntEnum):

@@ -23,11 +23,12 @@ class SaveFileToS3(ISaveFileToExternalStorage):
         self.endpoint_url = endpoint_url
         self.bucket = bucket
 
-    async def __call__(self, uuid: str) -> None:
+    async def __call__(self, uuid: str) -> bool:
         file = await self._get_file(uuid)
         sent = await self._save_to_s3(file)
         if sent:
             await self._update_file(file)
+        return sent
 
     async def _get_file(self, uuid: str) -> File:
         return await self.repo.get_by_id(uuid)

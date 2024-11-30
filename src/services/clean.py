@@ -1,7 +1,7 @@
 import asyncio
 import logging
 from datetime import timedelta
-from typing import List
+from typing import List, Type
 
 from aiofiles import os
 from sqlalchemy import Result
@@ -10,7 +10,7 @@ from models.file import File
 from services.interfaces import ICleanDisk
 from utils.asyncio import gather_with_concurrency
 from utils.repo import IRepo
-from utils.sqlalchemy import FilterSeq, IFilter, mode, operator
+from utils.sqlalchemy import IFilter, IFilterSeq, mode, operator
 from utils.time import get_current_time
 
 logger = logging.getLogger("cleanup")
@@ -25,6 +25,7 @@ class CleanDisk(ICleanDisk):
         created_at_filter: IFilter[File],
         updated_at_filter: IFilter[File],
         is_removed_from_disk_filter: IFilter[File],
+        filter_seq_class: Type[IFilterSeq],
     ) -> None:
         self.max_days = max_days
         self.max_days_unused = max_days_unused
@@ -32,6 +33,7 @@ class CleanDisk(ICleanDisk):
         self.created_at_filter = created_at_filter
         self.updated_at_filter = updated_at_filter
         self.is_removed_from_disk_filter = is_removed_from_disk_filter
+        self.filter_seq_class = filter_seq_class
 
     async def __call__(self) -> None:
         tasks: List[asyncio.Task[str | None]] = []
@@ -46,10 +48,10 @@ class CleanDisk(ICleanDisk):
 
     async def _get_files_for_cleanup(self) -> Result[File]:
         return await self.repo.get_by_filters(
-            filters=FilterSeq(
+            filters=self.filter_seq_class(
                 mode.and_,
                 self.is_removed_from_disk_filter(False, operator.is_),
-                FilterSeq(
+                self.filter_seq_class(
                     mode.or_,
                     self.created_at_filter(
                         get_current_time() - timedelta(days=self.max_days), operator.le
@@ -65,7 +67,7 @@ class CleanDisk(ICleanDisk):
     async def _delete_from_disk(self, file: File) -> str | None:
         try:
             await os.remove(file.path)
-            return file.uuid
+            return str(file.uuid)
         except FileNotFoundError:
             logger.error(
                 "Error cleaning disk from file.",

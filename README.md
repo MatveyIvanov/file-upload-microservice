@@ -1,4 +1,4 @@
-# FastAPI Template
+# FastAPI File Upload Microservice
 ![Static Badge](https://img.shields.io/badge/python-3.11-brightgreen?style=flat&logo=python)
 ![Static Badge](https://img.shields.io/badge/FastAPI-0.112.0-brightgreen?style=flat&logo=python)
 ![Static Badge](https://img.shields.io/badge/coverage-75%25-brightgreen?logo=pytest)
